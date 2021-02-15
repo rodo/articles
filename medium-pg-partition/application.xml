@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<!DOCTYPE tsung SYSTEM "/usr/share/tsung/tsung-1.0.dtd">
+<tsung loglevel="notice">
+
+  <clients>
+    <client host="localhost" use_controller_vm="true"/>
+  </clients>
+
+  <!-- Server side setup -->
+ <servers>
+  <server host="127.0.0.1" port="5412" type="tcp"/>
+ </servers>
+
+  <monitoring>
+   <monitor host="localhost"/>
+  </monitoring>
+  
+ <load>
+  <arrivalphase phase="1" duration="10" unit="second">
+    <users interarrival="2" unit="second"></users>
+  </arrivalphase>
+  <arrivalphase phase="2" duration="20" unit="second">
+    <users interarrival="1" unit="second"></users>
+  </arrivalphase>
+  <arrivalphase phase="3" duration="90" unit="second">
+    <users arrivalrate="20" unit="second"></users>
+  </arrivalphase>  
+ </load>
+
+ <sessions>
+   <session probability="50" name="pgsql-example" type="ts_pgsql">
+
+     <setdynvars sourcetype="random_number" start="3" end="7">
+       <var name="rndint" />
+     </setdynvars>
+
+     <setdynvars sourcetype="random_number" start="3" end="17">
+       <var name="rnday" />
+     </setdynvars>
+
+     <setdynvars sourcetype="random_number" start="1" end="12">
+       <var name="rnmonth" />
+     </setdynvars>     
+     
+     
+    <transaction name="connection">
+      <request>
+        <pgsql type="connect" database="medium" username="rodo" />
+      </request>
+    </transaction>
+
+    <transaction name="authentication">
+      <request>
+        <pgsql type="authenticate" password="rodo"/>
+      </request>
+    </transaction>
+    
+    <transaction name="insert">    
+      <request><pgsql type="sql">INSERT INTO payments (created, amount) VALUES (now(), 32.2);</pgsql></request>
+    </transaction>
+
+    <transaction name="where">
+      <request subst="true">
+
+        <pgsql type="sql"><![CDATA[SELECT count(created) from payments 
+WHERE created > '2021-03-02' AND created < '2021-03-04' ;]]></pgsql></request>
+    </transaction>
+
+    <transaction name="where">
+      <request><pgsql type="sql"><![CDATA[SELECT count(created) from payments 
+WHERE created > '2021-02-02' AND created < '2021-02-04' ;]]></pgsql></request>
+    </transaction>            
+
+    <request><pgsql type="close"></pgsql></request>
+
+  </session>
+
+  <!-- We update the data to generate some bloat -->
+   <session probability="50" name="update" type="ts_pgsql">
+
+     <setdynvars sourcetype="random_number" start="0" end="23">
+       <var name="rnhour" />
+     </setdynvars>
+
+     <!-- we update the last 2 month payments -->
+     <setdynvars sourcetype="random_number" start="1" end="62">
+       <var name="rnday" />
+     </setdynvars>
+
+     <setdynvars sourcetype="random_number" start="1" end="12">
+       <var name="rnmonth" />
+     </setdynvars>     
+          
+    <transaction name="connection">
+      <request>
+        <pgsql type="connect" database="medium" username="rodo" />
+      </request>
+    </transaction>
+
+    <transaction name="authentication">
+      <request>
+        <pgsql type="authenticate" password="rodo"/>
+      </request>
+    </transaction>
+    
+    <transaction name="update">    
+      <request subst="true">
+        <pgsql type="sql">
+          UPDATE payments SET amount=%%_rnday%%, status='updated'
+          WHERE created=date_trunc('minute', now() - INTERVAL '%%_rnday%% days');
+      </pgsql></request>
+    </transaction>
+
+    <request><pgsql type="close"></pgsql></request>
+
+  </session>
+  
+
+
+  
+ </sessions>
+</tsung>
+
