@@ -2,13 +2,13 @@ pull_request_rules:
   - name: add lablel when author is rodo
     conditions:
       - author = rodo
-      actions:
-        label:
-          add:
-            - Rodolphe
+    actions:
+      label:
+        add:
+          - Rodolphe
 
   - name: put PRs in queue
     conditions:
       - base=main
-      actions:
-        queue:
+    actions:
+      queue:
