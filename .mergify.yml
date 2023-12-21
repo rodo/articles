@@ -1,3 +1,9 @@
+queue_rules:
+  - name: hotfix
+    queue_conditions:
+      - label = hotfix
+  - name: standard
+
 pull_request_rules:
   - name: add lablel when author is rodo
     conditions:
@@ -9,6 +15,8 @@ pull_request_rules:
 
   - name: put PRs in queue
     conditions:
-      - base=main
+      - and:
+          - base=main
+          - "#approved-reviews-by>=1"
     actions:
       queue:
