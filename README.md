@@ -1,2 +1,2 @@
 # articles
-Some files used in public articles
+Some files used in my public articles
